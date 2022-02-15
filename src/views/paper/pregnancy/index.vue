@@ -104,7 +104,7 @@
           <el-input v-model="form.fileId" placeholder="请输入文件标识" />
         </el-form-item>-->
 
-        <el-form-item label="检验试纸" prop="file">
+        <el-form-item label="检验试纸" prop="imgFile">
           <el-upload
             class="upload-demo"
             action="https://jsonplaceholder.typicode.com/posts/"
@@ -112,14 +112,16 @@
             :on-remove="handleRemove"
             :on-success="handleUploadSuccess"
             :file-list="fileList"
+            :limit="limitNum"
             list-type="picture">
             <el-button size="small" type="primary">点击上传</el-button>
-            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+<!--            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>-->
           </el-upload>
         </el-form-item>
 
         <el-form-item label="检验时间" prop="operateTime">
           <el-date-picker clearable size="small"
+            style= "width:100%"
             v-model="form.operateTime"
             type="datetime"
             value-format="yyyy-MM-dd HH:mm:ss"
@@ -174,7 +176,8 @@ export default {
       // 表单校验
       rules: {
       },
-      fileList: []
+      fileList: [],
+      limitNum: 1
     };
   },
   created() {
@@ -199,7 +202,8 @@ export default {
     reset() {
       this.form = {
         id: null,
-        file: null,
+        imgName: null,
+        imgUrl: null,
         fileId: null,
         operateTime: null,
         createId: null,
@@ -209,6 +213,7 @@ export default {
         delFlag: null,
         remark: null
       };
+      this.fileList = [];
       this.resetForm("form");
     },
     /** 搜索按钮操作 */
@@ -239,6 +244,7 @@ export default {
       const id = row.id || this.ids
       getPregnancy(id).then(response => {
         this.form = response.data;
+        this.fileList.push({name:this.form.imgName,url:this.form.imgUrl});
         this.open = true;
         this.title = "修改检验信息";
       });
@@ -285,8 +291,13 @@ export default {
     handlePreview(file) {
       console.log(file);
     },
-    handleUploadSuccess(res, file) {
-      //this.form.file = file;
+    handleUploadSuccess(response,file,fileList) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file.raw);
+      reader.onload = () => {
+        this.form.imgUrl = reader.result;
+        this.form.imgName = file.name;
+      };
     },
 
   }

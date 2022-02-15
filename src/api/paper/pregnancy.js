@@ -22,6 +22,7 @@ export function addPregnancy(data) {
   return request({
     url: '/paper/pregnancy',
     method: 'post',
+    //headers: { "Content-Type": "multipart/form-data;boundary="+new Date().getTime()},
     data: data
   })
 }
