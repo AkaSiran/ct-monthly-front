@@ -1,12 +1,13 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="操作时间" prop="operateTime">
+      <el-form-item label="检验时间" prop="operateTime">
         <el-date-picker clearable size="small"
           v-model="queryParams.operateTime"
-          type="date"
-          value-format="yyyy-MM-dd"
-          placeholder="选择操作时间">
+          type="datetime"
+          format='yyyy-MM-dd HH:mm:ss'
+          value-format="yyyy-MM-dd HH:mm:ss"
+          placeholder="选择检验时间">
         </el-date-picker>
       </el-form-item>
       <el-form-item>
@@ -48,7 +49,7 @@
           v-hasPermi="['paper:pregnancy:remove']"
         >删除</el-button>
       </el-col>
-      <el-col :span="1.5">
+<!--      <el-col :span="1.5">
         <el-button
           type="warning"
           plain
@@ -57,16 +58,16 @@
           @click="handleExport"
           v-hasPermi="['paper:pregnancy:export']"
         >导出</el-button>
-      </el-col>
+      </el-col>-->
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
     <el-table v-loading="loading" :data="pregnancyList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="主键" align="center" prop="id" />
-      <el-table-column label="操作时间" align="center" prop="operateTime" width="180">
+      <el-table-column label="深度" align="center" prop="degreeLabel" />
+      <el-table-column label="检验时间" align="center" prop="operateTime" width="180">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.operateTime, '{y}-{m}-{d}') }}</span>
+          <span>{{ parseTime(scope.row.operateTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
@@ -192,8 +193,8 @@
     </el-dialog>
 
     <!-- 查看pregnancy对话框 -->
-    <el-dialog :title="title" :visible.sync="view" width="500px" append-to-body>
-      <el-form ref="form" :model="form" label-width="80px">
+    <el-dialog :title="title" :visible.sync="view" width="520px" append-to-body>
+      <el-form ref="form" :model="form" label-width="100px">
         <el-form-item label="检验试纸" prop="imgFile">
 <!--          <img :src="this.form.imgUrl" style="width:100%"/>-->
           <el-popover
@@ -209,12 +210,33 @@
           <el-input v-model="form.degreeLabel"  readonly/>
         </el-form-item>
 
-        <el-form-item label="检验时间" prop="operateTime">
-          <el-input v-model="form.operateTime"  />
+        <el-form-item label="上次峰值" prop="operateTime">
+          <el-input v-model="form.lastPeakDegreeLabel"  readonly/>
         </el-form-item>
 
+        <el-form-item label="此次检验时间" prop="operateTime">
+          <el-input v-model="form.operateTime"  readonly/>
+        </el-form-item>
+
+        <el-form-item label="上次等值时间" prop="operateTime">
+          <el-input v-model="form.lastEquivalenceTime"  readonly/>
+        </el-form-item>
+
+        <el-form-item label="上次峰值时间" prop="operateTime">
+          <el-input v-model="form.lastPeakTime"  readonly/>
+        </el-form-item>
+
+        <el-form-item label="预估峰值天数" prop="operateTime">
+          <el-input v-model="form.dayDifference"  readonly/>
+        </el-form-item>
+
+        <el-form-item label="预估峰值时间" prop="operateTime">
+          <el-input v-model="form.expectPeakTime"  readonly/>
+        </el-form-item>
+
+
         <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
+          <el-input v-model="form.remark" type="textarea" readonly/>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -308,7 +330,12 @@ export default {
         updateTime: null,
         delFlag: null,
         remark: null,
-        degreeLabel: null
+        degreeLabel: null,
+        lastEquivalenceTime: null,
+        lastPeakDegreeLabel: null,
+        lastPeakTime: null,
+        expectPeakTime: null,
+        dayDifference: null
       };
       this.options.img = null;
       this.resetForm("form");
@@ -385,7 +412,7 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const ids = row.id || this.ids;
-      this.$modal.confirm('是否确认删除pregnancy编号为"' + ids + '"的数据项？').then(function() {
+      this.$modal.confirm('是否确认所选数据项？').then(function() {
         return delPregnancy(ids);
       }).then(() => {
         this.getList();
